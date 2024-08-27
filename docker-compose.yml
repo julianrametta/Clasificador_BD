@@ -1,0 +1,63 @@
+version: '3.1'
+
+services:
+  db_courses:
+    image: mysql:latest
+    container_name: mysql_db_courses
+    environment:
+      MYSQL_ROOT_PASSWORD: courses123
+      MYSQL_DATABASE: db_courses
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./sql_scripts/create_db_courses.sql:/docker-entrypoint-initdb.d/create_db_courses.sql
+    networks:
+      - development
+
+  db_clasificador:
+    image: mysql:latest
+    container_name: mysql_db_clasificador
+    environment:
+      MYSQL_ROOT_PASSWORD: clasif456
+      MYSQL_DATABASE: db_clasificador
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./sql_scripts/create_db_clasificador.sql:/docker-entrypoint-initdb.d/create_db_clasificador.sql
+    networks:
+      - development
+
+  app_clasificador:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app_clasificador
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./src/.env
+    depends_on:
+      - db_courses
+      - db_clasificador
+    networks:
+      - development
+    
+    restart: always
+  
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - db_clasificador
+    ports:
+      - "8080:80"
+    restart: always
+    environment:
+      PMA_HOST: db_clasificador
+      MYSQL_ROOT_PASSWORD: clasif456
+    networks:
+      - development
+  
+networks:
+  development:
+    driver: bridge
+    
